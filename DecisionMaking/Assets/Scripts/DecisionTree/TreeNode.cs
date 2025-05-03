@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TreeNode
+public abstract class TreeNode
 {
-    
+    public abstract ActionNode MakeDecision();
 }
