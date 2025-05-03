@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Heal : Action
+public class Patrol : Action
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
