@@ -1,17 +1,19 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Chase : Action
 {
-    private NPC npc;
-
-    public Chase(NPC npcRef)
+    private NavMeshAgent agent;
+    private Transform target;
+    public void ChaseRefs(NavMeshAgent agentRef, Transform targetRef)
     {
-        npc = npcRef;
+        agent = agentRef;
+        target = targetRef;
     }
-
     public override void ActiveAction()
     {
-        if (npc == null || npc.target == null) return;
-        Vector3 direction = npc.target.transform.position - npc.transform.position;
+        if (agent == null || target == null) return;
+
+        agent.SetDestination(target.position);
     }
 }
