@@ -21,9 +21,13 @@ public class Heal : Action
             NPC npc = agent.GetComponent<NPC>();
             npc.HealNPC();
         }
-        if(agent.GetComponent<NPC>().algorithm == DecisionMakingAlgorithm.FSMWithTree)
+        if(agent.GetComponent<NPC>() != null)
         {
-            agent.GetComponent<NPC>().state = States.Heal;
+            if(agent.GetComponent<NPC>().algorithm == DecisionMakingAlgorithm.FSMWithTree)
+            {
+                agent.GetComponent<NPC>().state = States.Heal;
+            }
+            agent.GetComponent<NPC>().ChangeColor(Color.green);
         }
     }
 }

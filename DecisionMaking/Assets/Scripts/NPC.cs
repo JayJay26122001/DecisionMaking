@@ -393,4 +393,9 @@ public class NPC : MonoBehaviour
             StartCoroutine(PFSMThink());
         }
     }
+
+    public void ChangeColor(Color32 col)
+    {
+        this.GetComponent<MeshRenderer>().material.color = col;
+    }
 }

@@ -16,9 +16,13 @@ public class Run : Action
         Vector3 directionToTarget = agent.transform.position - target.position;
         Vector3 runPosition = agent.transform.position + directionToTarget;
         agent.SetDestination(runPosition);
-        if (agent.GetComponent<NPC>().algorithm == DecisionMakingAlgorithm.FSMWithTree)
+        if (agent.GetComponent<NPC>() != null)
         {
-            agent.GetComponent<NPC>().state = States.Run;
+            if (agent.GetComponent<NPC>().algorithm == DecisionMakingAlgorithm.FSMWithTree)
+            {
+                agent.GetComponent<NPC>().state = States.Run;
+            }
+            agent.GetComponent<NPC>().ChangeColor(Color.yellow);
         }
     }
 }

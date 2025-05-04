@@ -15,5 +15,9 @@ public class Chase : Action
         if (agent == null || target == null) return;
 
         agent.SetDestination(target.position);
+        if (agent.GetComponent<NPC>() != null)
+        {
+            agent.GetComponent<NPC>().ChangeColor(Color.red);
+        }
     }
 }

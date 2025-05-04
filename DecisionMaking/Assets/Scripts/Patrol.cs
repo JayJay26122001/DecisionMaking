@@ -21,5 +21,9 @@ public class Patrol : Action
                 currentWaypointIndex = 0;
         }
         agent.SetDestination(waypoints[currentWaypointIndex].position);
+        if (agent.GetComponent<NPC>() != null)
+        {
+            agent.GetComponent<NPC>().ChangeColor(Color.magenta);
+        }
     }
 }
