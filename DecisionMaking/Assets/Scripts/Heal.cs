@@ -21,6 +21,9 @@ public class Heal : Action
             NPC npc = agent.GetComponent<NPC>();
             npc.HealNPC();
         }
-
+        if(agent.GetComponent<NPC>().algorithm == DecisionMakingAlgorithm.FSMWithTree)
+        {
+            agent.GetComponent<NPC>().state = States.Heal;
+        }
     }
 }

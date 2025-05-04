@@ -6,18 +6,28 @@ using System.Collections;
 public enum DecisionMakingAlgorithm
 {
     FSM,
+    FSMWithTree,
     DecisionTree,
     NFSM,
     PFSM
 }
 
+public enum States
+{
+    Patrol,
+    Chase,
+    Heal,
+    Run
+}
+
 public class NPC : MonoBehaviour
 {
     public DecisionMakingAlgorithm algorithm;
+    public States state;
     public int health, maxHealth;
     public GameObject target, healingTarget;
     public bool isPlayerNear, isHealingNear;
-    public float safeDistance;
+    public float safeDistance, distanceToPlayer, distanceToHeal;
     public LayerMask visionMask;
     public Transform[] patrolWaypoints;
     private DecisionNode Root;
@@ -27,7 +37,7 @@ public class NPC : MonoBehaviour
     private Patrol patrolAction;
     private Heal healAction;
     public TextMeshProUGUI healthText;
-
+    int rand;
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -44,12 +54,40 @@ public class NPC : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            health--;
+            if(health > 0)
+            {
+                health--;
+            }
             UpdateHealthText();
         }
         CheckForTargets();
-        if(algorithm == DecisionMakingAlgorithm.DecisionTree) 
-            Root.MakeDecision().Execute();
+        switch(algorithm)
+        {
+            case DecisionMakingAlgorithm.DecisionTree:
+                Root.MakeDecision().Execute();
+                break;
+
+            default:
+                switch(state)
+                {
+                    case States.Patrol:
+                        patrolAction.ActiveAction();
+                        break;
+
+                    case States.Chase:
+                        chaseAction.ActiveAction();
+                        break;
+                        
+                    case States.Heal:
+                        healAction.ActiveAction();
+                        break;
+
+                    case States.Run:
+                        runAction.ActiveAction();
+                        break;
+                }
+                break;
+        }
     }
 
     public void UpdateHealthText()
@@ -62,7 +100,11 @@ public class NPC : MonoBehaviour
 
     public void CheckForTargets()
     {
-        if(Vector3.Distance(transform.position, target.transform.position) < safeDistance)
+        distanceToPlayer = Vector3.Distance(transform.position, target.transform.position);
+        isPlayerNear = distanceToPlayer < safeDistance;
+        distanceToHeal = Vector3.Distance(transform.position, healingTarget.transform.position);
+        isHealingNear = distanceToHeal < safeDistance;
+        /*if (Vector3.Distance(transform.position, target.transform.position) < safeDistance)
         {
             isPlayerNear = true;
         }
@@ -77,7 +119,7 @@ public class NPC : MonoBehaviour
         else
         {
             isHealingNear = false;
-        }
+        }*/
     }
 
     public void HealNPC()
@@ -126,17 +168,229 @@ public class NPC : MonoBehaviour
         switch (algorithm)
         {
             case DecisionMakingAlgorithm.FSM:
-
+                state = States.Patrol;
+                StartCoroutine(FSMThink());
+                break;
+            case DecisionMakingAlgorithm.FSMWithTree:
+                state = States.Patrol;
+                FSMDecisionTree();
+                StartCoroutine(FSMWithTreeThink());
                 break;
             case DecisionMakingAlgorithm.DecisionTree:
                 DecisionTree();
                 break;
             case DecisionMakingAlgorithm.NFSM:
-
+                state = States.Patrol;
+                StartCoroutine(NFSMThink());
                 break;
             case DecisionMakingAlgorithm.PFSM:
-
+                state = States.Patrol;
+                StartCoroutine(PFSMThink());
                 break;
+        }
+    }
+
+    public IEnumerator FSMThink()
+    {
+        if(state == States.Patrol)
+        {
+            if(isPlayerNear)
+            {
+                state = States.Chase;
+            }
+        }
+        else if(state == States.Chase)
+        {
+            if(health < maxHealth / 2)
+            {
+                state = States.Run;
+            }
+        }
+        else
+        {
+            if(!isPlayerNear)
+            {
+                state = States.Patrol;
+            }
+        }
+        
+        yield return new WaitForSeconds(0.25f);
+        if(algorithm == DecisionMakingAlgorithm.FSM)
+        {
+            StartCoroutine(FSMThink());
+        }
+    }
+    public IEnumerator FSMWithTreeThink()
+    {
+        if(state == States.Patrol)
+        {
+            if(isPlayerNear)
+            {
+                state = States.Chase;
+            }
+        }
+        else if(state == States.Chase)
+        {
+            if(health < maxHealth / 2)
+            {
+                Root.MakeDecision().Execute();
+            }
+        }
+        else if(state == States.Run)
+        {
+            if(!isPlayerNear)
+            {
+                state = States.Patrol;
+            }
+        }
+        else
+        {
+            if(health > maxHealth / 2)
+            {
+                state = States.Patrol;
+            }
+        }
+        
+        yield return new WaitForSeconds(0.25f);
+        if(algorithm == DecisionMakingAlgorithm.FSMWithTree)
+        {
+            StartCoroutine(FSMWithTreeThink());
+        }
+    }
+
+    public void FSMDecisionTree()
+    {
+        ActionNode run = new ActionNode(runAction);
+        ActionNode heal = new ActionNode(healAction);
+        Root = new DecisionNode(() => isHealingNear, heal, run);
+    }
+
+    public IEnumerator NFSMThink()
+    {
+        if(state == States.Patrol)
+        {
+            if(isPlayerNear)
+            {
+                rand = Random.Range(0, 2);
+                if(rand == 0)
+                {
+                    state = States.Chase;
+                }
+                else
+                {
+                    state = States.Run;
+                }
+            }
+        }
+        else if(state == States.Chase)
+        {
+            if(health < maxHealth / 2)
+            {
+                rand = Random.Range(0, 2);
+                if (rand == 0)
+                {
+                    state = States.Heal;
+                }
+                else
+                {
+                    state = States.Run;
+                }
+            }
+        }
+        else if(state == States.Run)
+        {
+            if(!isPlayerNear)
+            {
+                rand = Random.Range(0, 2);
+                if (rand == 0)
+                {
+                    state = States.Patrol;
+                }
+                else
+                {
+                    state = States.Heal;
+                }
+            }
+        }
+        else
+        {
+            if(health > maxHealth / 2)
+            {
+                state = States.Patrol;
+            }
+        }
+        
+        yield return new WaitForSeconds(0.25f);
+        if(algorithm == DecisionMakingAlgorithm.NFSM)
+        {
+            StartCoroutine(NFSMThink());
+        }
+    }
+    public IEnumerator PFSMThink()
+    {
+        if(state == States.Patrol)
+        {
+            if(isPlayerNear)
+            {
+                rand = Random.Range(1, 11);
+                if(rand <= health)
+                {
+                    state = States.Chase;
+                }
+                else
+                {
+                    state = States.Run;
+                }
+            }
+        }
+        else if(state == States.Chase)
+        {
+            if(health < maxHealth / 2)
+            {
+                float nearHealDistance = Mathf.Clamp(distanceToHeal - safeDistance, 0, 10);
+                rand = Random.Range(1, 11);
+                if (rand < nearHealDistance)
+                {
+                    state = States.Run;
+                }
+                else
+                {
+                    state = States.Heal;
+                }
+            }
+        }
+        else if(state == States.Run)
+        {
+            if(!isPlayerNear)
+            {
+                float nearPlayerDistance = Mathf.Clamp(distanceToPlayer - safeDistance, 0, 10);
+                rand = Random.Range(1, 11);
+                if(rand < nearPlayerDistance)
+                {
+                    rand = Random.Range(1, 11);
+                    if (rand <= health)
+                    {
+                        state = States.Patrol;
+                    }
+                    else
+                    {
+                        state = States.Heal;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if(health > maxHealth / 2)
+            {
+                state = States.Patrol;
+            }
+        }
+        
+        yield return new WaitForSeconds(0.25f);
+        if(algorithm == DecisionMakingAlgorithm.PFSM)
+        {
+            StartCoroutine(PFSMThink());
         }
     }
 }
