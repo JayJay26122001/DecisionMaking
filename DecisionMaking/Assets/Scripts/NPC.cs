@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
+using System.Collections;
 
 public enum DecisionMakingAlgorithm
 {
@@ -14,8 +16,8 @@ public class NPC : MonoBehaviour
     public DecisionMakingAlgorithm algorithm;
     public int health, maxHealth;
     public GameObject target, healingTarget;
-    public bool isViewingPlayer, isViewingHealing;
-    public float visionRange, fieldOfViewAngle;
+    public bool isPlayerNear, isHealingNear;
+    public float safeDistance;
     public LayerMask visionMask;
     public Transform[] patrolWaypoints;
     private DecisionNode Root;
@@ -24,6 +26,7 @@ public class NPC : MonoBehaviour
     private Run runAction;
     private Patrol patrolAction;
     private Heal healAction;
+    public TextMeshProUGUI healthText;
 
     void Awake()
     {
@@ -31,67 +34,68 @@ public class NPC : MonoBehaviour
         InitializeActions();
         NPCBehaviour();
         Debug.Log(algorithm.ToString() + " criada");
-        health = maxHealth;
     }
-
+    void Start()
+    {
+        health = maxHealth;
+        UpdateHealthText();
+    }
     void Update()
     {
-        CheckForTargets();
-        if (Input.GetKeyDown(KeyCode.X))
+        if (Input.GetMouseButtonDown(0))
         {
             health--;
+            UpdateHealthText();
         }
-        Root.MakeDecision().Execute();
+        CheckForTargets();
+        if(algorithm == DecisionMakingAlgorithm.DecisionTree) 
+            Root.MakeDecision().Execute();
     }
 
-    void CheckForTargets()
+    public void UpdateHealthText()
     {
-        if (CheckForTargetInCone(target))
+        if (healthText != null)
         {
-            isViewingPlayer = true;
+            healthText.text = $"NPC Health : {health} / {maxHealth}";
+        }
+    }
+
+    public void CheckForTargets()
+    {
+        if(Vector3.Distance(transform.position, target.transform.position) < safeDistance)
+        {
+            isPlayerNear = true;
         }
         else
         {
-            isViewingPlayer = false;
+            isPlayerNear = false;
         }
-        if (CheckForTargetInCone(healingTarget))
+        if(Vector3.Distance(transform.position, healingTarget.transform.position) < safeDistance)
         {
-            isViewingHealing = true;
+            isHealingNear = true;
         }
         else
         {
-            isViewingHealing = false;
+            isHealingNear = false;
         }
     }
 
-    public bool CheckForTargetInCone(GameObject targetObject)
+    public void HealNPC()
     {
-        RaycastHit hit;
-        Vector3 directionToTarget = (targetObject.transform.position - transform.position).normalized;
-        float angle = Vector3.Angle(transform.forward, directionToTarget);
-        if (angle <= fieldOfViewAngle / 2)
-        {
-            if (Physics.Raycast(transform.position, directionToTarget, out hit, visionRange, visionMask))
-            {
-                if (hit.collider.gameObject == targetObject)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        health += 3;
+        if (health > maxHealth)
+            health = maxHealth;
+        UpdateHealthText();
+        healingTarget.gameObject.SetActive(false);
+        healingTarget.gameObject.GetComponent<Collider>().enabled = false;
+        StartCoroutine(ReactivateHealingTarget());
     }
 
-    public void OnTriggerEnter(Collider other)
+    public IEnumerator ReactivateHealingTarget()
     {
-        if(other.gameObject.tag == "HealingOrb")
-        {
-            this.health += 3;
-            if(health > maxHealth)
-            {
-                health = maxHealth;
-            }
-        }
+        yield return new WaitForSeconds(5f);
+        healingTarget.gameObject.SetActive(true);
+        healingTarget.gameObject.GetComponent<Collider>().enabled = true;
     }
 
     public void InitializeActions()
@@ -103,6 +107,7 @@ public class NPC : MonoBehaviour
         chaseAction = new Chase();
         chaseAction.ChaseRefs(agent, target.transform);
         healAction = new Heal();
+        healAction.HealRefs(agent, healingTarget.transform);
     }
 
     public void DecisionTree()
@@ -110,10 +115,10 @@ public class NPC : MonoBehaviour
         ActionNode run = new ActionNode(runAction);
         ActionNode patrol = new ActionNode(patrolAction);
         ActionNode chase = new ActionNode(chaseAction);
-        ActionNode heal = new ActionNode(new Heal());
-        DecisionNode layer2num1 = new DecisionNode(() => isViewingPlayer, run, patrol);
-        DecisionNode layer1num1 = new DecisionNode(() => isViewingPlayer, chase, patrol);
-        DecisionNode layer1num2 = new DecisionNode(() => isViewingHealing, heal, layer2num1);
+        ActionNode heal = new ActionNode(healAction);
+        DecisionNode layer2num1 = new DecisionNode(() => isPlayerNear, run, patrol);
+        DecisionNode layer1num1 = new DecisionNode(() => isPlayerNear, chase, patrol);
+        DecisionNode layer1num2 = new DecisionNode(() => isHealingNear, heal, layer2num1);
         Root = new DecisionNode(() => (health <= 5), layer1num2, layer1num1);
     }
     public void NPCBehaviour()
