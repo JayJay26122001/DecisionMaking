@@ -1325,7 +1325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6e32e980fe4cb845bbab014db0cfd07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  algorithm: 2
+  algorithm: 3
   state: 0
   health: 0
   maxHealth: 10
@@ -1345,6 +1345,71 @@ MonoBehaviour:
   - {fileID: 1224944949}
   - {fileID: 926165627}
   healthText: {fileID: 747944293}
+  examples:
+  - infos:
+    - name: Healthy
+      boolean: 0
+    - name: NearPlayer
+      boolean: 0
+    - name: NearHeal
+      boolean: 0
+    action: 3
+  - infos:
+    - name: Healthy
+      boolean: 0
+    - name: NearPlayer
+      boolean: 0
+    - name: NearHeal
+      boolean: 1
+    action: 2
+  - infos:
+    - name: Healthy
+      boolean: 0
+    - name: NearPlayer
+      boolean: 1
+    - name: NearHeal
+      boolean: 0
+    action: 3
+  - infos:
+    - name: Healthy
+      boolean: 0
+    - name: NearPlayer
+      boolean: 1
+    - name: NearHeal
+      boolean: 1
+    action: 2
+  - infos:
+    - name: Healthy
+      boolean: 1
+    - name: NearPlayer
+      boolean: 0
+    - name: NearHeal
+      boolean: 0
+    action: 0
+  - infos:
+    - name: Healthy
+      boolean: 1
+    - name: NearPlayer
+      boolean: 0
+    - name: NearHeal
+      boolean: 1
+    action: 0
+  - infos:
+    - name: Healthy
+      boolean: 1
+    - name: NearPlayer
+      boolean: 1
+    - name: NearHeal
+      boolean: 0
+    action: 1
+  - infos:
+    - name: Healthy
+      boolean: 1
+    - name: NearPlayer
+      boolean: 1
+    - name: NearHeal
+      boolean: 1
+    action: 1
 --- !u!1 &1224944948
 GameObject:
   m_ObjectHideFlags: 0
@@ -2045,7 +2110,7 @@ Transform:
   m_GameObject: {fileID: 1753200141}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14.82, y: 1, z: 0}
+  m_LocalPosition: {x: 26.47, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

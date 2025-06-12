@@ -5,8 +5,13 @@ using UnityEngine;
 [Serializable]
 public class ParametersID3
 {
-    public List<Booleans> infos = new List<Booleans> {new Booleans("Healthy"), new Booleans("NearPlayer"), new Booleans("NearCure") };
+    public List<Booleans> infos = new List<Booleans>();
     public States action;
+
+    public ParametersID3(States act)
+    {
+        action = act;
+    }
 }
 
 [Serializable]

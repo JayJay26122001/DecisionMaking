@@ -1,5 +1,4 @@
 using System;
-
 public class DecisionNode : TreeNode
 {
     public TreeNode True, False;
